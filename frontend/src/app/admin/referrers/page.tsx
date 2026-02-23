@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getApiBaseUrl } from '@/lib/apiBase';
+import { useLanguage } from '@/lib/LanguageContext';
 
 interface Referrer {
   id: number;
@@ -15,6 +16,7 @@ interface Referrer {
 
 export default function ReferrerManagement() {
   const router = useRouter();
+  const { t, locale } = useLanguage();
   const [referrers, setReferrers] = useState<Referrer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -33,7 +35,7 @@ export default function ReferrerManagement() {
           setReferrers(await response.json());
         }
       } catch (err) {
-        console.error("추천인 목록 로드 실패:", err);
+        console.error("referrers fetch failed:", err);
       } finally {
         setIsLoading(false);
       }
@@ -58,19 +60,19 @@ export default function ReferrerManagement() {
             <table className="w-full text-left">
               <thead className="bg-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                 <tr>
-                  <th className="p-6">Referrer Email</th>
-                  <th className="p-6">Username</th>
-                  <th className="p-6">Sector</th>
-                  <th className="p-6">Invited Users</th>
-                  <th className="p-6">Total Rewards (U)</th>
-                  <th className="p-6">Status</th>
+                  <th className="p-6">{t('colReferrerEmail')}</th>
+                  <th className="p-6">{t('colUsernameLabel')}</th>
+                  <th className="p-6">{t('colSector')}</th>
+                  <th className="p-6">{t('colInvitedUsers')}</th>
+                  <th className="p-6">{t('colTotalRewards')}</th>
+                  <th className="p-6">{t('status')}</th>
                 </tr>
               </thead>
               <tbody className="text-sm">
                 {referrers.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="p-16 text-center text-slate-600 font-bold uppercase tracking-widest">
-                      추천인 데이터가 없습니다
+                      {t('noReferrersMsg')}
                     </td>
                   </tr>
                 ) : (
@@ -79,11 +81,11 @@ export default function ReferrerManagement() {
                       <td className="p-6 font-mono">{ref.email}</td>
                       <td className="p-6 text-slate-300">{ref.username}</td>
                       <td className="p-6 text-blue-400 font-bold">{ref.sector_id ? `Sector ${ref.sector_id}` : '-'}</td>
-                      <td className="p-6">{ref.invited_count} 명</td>
-                      <td className="p-6 text-green-400 font-black">{ref.total_rewards.toLocaleString()} U</td>
+                      <td className="p-6">{ref.invited_count}{locale === 'ko' ? ' 명' : ''}</td>
+                      <td className="p-6 text-green-400 font-black">{ref.total_rewards.toLocaleString()} P</td>
                       <td className="p-6">
                         <span className="px-3 py-1 bg-green-500/10 text-green-500 border border-green-500/20 rounded-full text-[9px] font-black uppercase">
-                          Active
+                          {t('statusActive')}
                         </span>
                       </td>
                     </tr>

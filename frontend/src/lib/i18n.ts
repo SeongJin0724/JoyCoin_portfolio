@@ -93,11 +93,109 @@ export const translations = {
 
     // Admin
     adminPanel: "Admin Panel",
+    adminSystemTitle: "System Control",
     depositManagement: "Deposit Management",
     approve: "Approve",
     reject: "Reject",
     user: "User",
     adminNotes: "Admin Notes",
+
+    // Admin – Tabs
+    tabDeposits: "Deposit Requests",
+    tabUsers: "User Management",
+    tabProducts: "Product Management",
+    tabSectors: "Sector Fee Settings",
+
+    // Admin – Stats
+    statTotalUsers: "Total Users",
+    statTotalDeposits: "Total Deposits",
+    statPending: "Pending",
+    statApproved: "Approved",
+    statTotalUsdt: "Total USDT",
+
+    // Admin – Deposit table
+    searchDepositPlaceholder: "Search by email, username, ID…",
+    allSectors: "All Sectors",
+    filterAll: "All",
+    filterPending: "Pending",
+    filterApproved: "Approved",
+    filterRejected: "Rejected",
+    colSector: "Sector",
+    colNetwork: "Network",
+    colJoyQty: "JOY Qty",
+    colRequestDate: "Date",
+    colAction: "Action",
+    noDepositsMsg: "No deposit requests",
+    noSearchResultMsg: "No results found",
+    actualAmountLabel: "Actual",
+    approveAction: "Approve",
+    rejectAction: "Reject",
+    statusCompleted: "Done",
+    statusRejectedLabel: "Rejected",
+    approveSuccess: "Approved. Please send JOY to the user!",
+    rejectSuccess: "Deposit request rejected.",
+
+    // Admin – User tab
+    statAllUsers: "All Users",
+    statAdmins: "Admins",
+    statBanned: "Banned",
+    searchUsersPlaceholder: "Search by email or username…",
+    colEmail: "Email",
+    colUsernameLabel: "Username",
+    colRole: "Role",
+    colJoinDate: "Join Date",
+    roleAdminLabel: "Admin",
+    roleSectorManager: "Sector Mgr",
+    roleUserLabel: "User",
+    statusActive: "Active",
+    banAction: "Ban",
+    unbanAction: "Unban",
+    promoteAction: "Promote",
+    demoteAction: "Demote",
+
+    // Admin – Product tab
+    productMgmt: "Product Management",
+    addProductBtn: "+ Add Product",
+    editProductTitle: "Edit Product",
+    newProductTitle: "Add New Product",
+    productNameLabel: "Product Name",
+    priceUsdtLabel: "Price (USDT)",
+    priceKrwLabel: "Price (KRW)",
+    discountRateLabel: "Discount (%)",
+    descriptionLabel: "Description",
+    deactivateBtn: "Deactivate",
+    activateBtn: "Activate",
+    inactiveLabel: "Inactive",
+    editBtn: "Edit",
+    addBtn: "Add",
+
+    // Admin – Sector / Rate tab
+    joyRateSettings: "JOY Rate Settings",
+    joyUsdtRate: "JOY / USDT Exchange Rate",
+    joyRateDesc: "1 USDT = ? JOY (manual until listed)",
+    changeBtn: "Change",
+    referralBonusSettings: "Referral Bonus Settings",
+    referralBonusPercent: "Referral Bonus Percent",
+    referralBonusDesc: "N% points on referral's USDT payment",
+    sectorFeeSettings: "Sector Fee Settings",
+
+    // Admin – Login
+    loginFailedPrefix: "Login failed: ",
+    serverConnectFailed: "Server connection failed",
+    verifying: "VERIFYING...",
+    enterDashboard: "ENTER DASHBOARD",
+
+    // Admin – Referrers
+    noReferrersMsg: "No referrer data",
+    colReferrerEmail: "Referrer Email",
+    colInvitedUsers: "Invited Users",
+    colTotalRewards: "Total Rewards (P)",
+
+    // Admin – Toast / misc
+    notAdminError: "This account does not have admin access.",
+    copyWalletSuccess: "Wallet address copied.",
+    noCopyTarget: "No address to copy.",
+    copyFailed: "Failed to copy.",
 
     // Footer
     footer: "© 2024 JOYCOIN GLOBAL FOUNDATION • SECURED BY BLOCKCHAIN",
@@ -193,11 +291,109 @@ export const translations = {
 
     // Admin
     adminPanel: "관리자 패널",
+    adminSystemTitle: "총관리자 시스템",
     depositManagement: "입금 관리",
     approve: "승인",
     reject: "거부",
     user: "사용자",
     adminNotes: "관리자 메모",
+
+    // Admin – Tabs
+    tabDeposits: "입금 요청 관리",
+    tabUsers: "사용자 관리",
+    tabProducts: "상품 관리",
+    tabSectors: "섹터 기여분 설정",
+
+    // Admin – Stats
+    statTotalUsers: "총 유저",
+    statTotalDeposits: "총 입금건",
+    statPending: "대기중",
+    statApproved: "승인완료",
+    statTotalUsdt: "총 USDT",
+
+    // Admin – Deposit table
+    searchDepositPlaceholder: "이메일, 유저명, ID로 검색…",
+    allSectors: "전체 섹터",
+    filterAll: "전체",
+    filterPending: "대기",
+    filterApproved: "승인",
+    filterRejected: "거절",
+    colSector: "섹터",
+    colNetwork: "네트워크",
+    colJoyQty: "JOY 수량",
+    colRequestDate: "요청일시",
+    colAction: "액션",
+    noDepositsMsg: "입금 요청이 없습니다",
+    noSearchResultMsg: "검색 결과가 없습니다",
+    actualAmountLabel: "실제",
+    approveAction: "승인",
+    rejectAction: "거절",
+    statusCompleted: "완료",
+    statusRejectedLabel: "거절됨",
+    approveSuccess: "승인 완료. 사용자에게 JOY 코인을 전송하세요!",
+    rejectSuccess: "입금 요청이 거절되었습니다.",
+
+    // Admin – User tab
+    statAllUsers: "전체 유저",
+    statAdmins: "관리자",
+    statBanned: "차단됨",
+    searchUsersPlaceholder: "이메일 또는 유저명으로 검색…",
+    colEmail: "이메일",
+    colUsernameLabel: "유저명",
+    colRole: "권한",
+    colJoinDate: "가입일",
+    roleAdminLabel: "관리자",
+    roleSectorManager: "섹터매니저",
+    roleUserLabel: "유저",
+    statusActive: "정상",
+    banAction: "차단",
+    unbanAction: "해제",
+    promoteAction: "승격",
+    demoteAction: "강등",
+
+    // Admin – Product tab
+    productMgmt: "상품 패키지 관리",
+    addProductBtn: "+ 새 상품",
+    editProductTitle: "상품 수정",
+    newProductTitle: "새 상품 추가",
+    productNameLabel: "상품명",
+    priceUsdtLabel: "가격 (USDT)",
+    priceKrwLabel: "가격 (KRW)",
+    discountRateLabel: "할인율 (%)",
+    descriptionLabel: "설명",
+    deactivateBtn: "비활성화",
+    activateBtn: "활성화",
+    inactiveLabel: "비활성",
+    editBtn: "수정",
+    addBtn: "추가",
+
+    // Admin – Sector / Rate tab
+    joyRateSettings: "JOY 시세 설정",
+    joyUsdtRate: "JOY / USDT 환율",
+    joyRateDesc: "1 USDT = ? JOY (거래소 상장 전까지 수동 조정)",
+    changeBtn: "변경",
+    referralBonusSettings: "추천인 보너스 설정",
+    referralBonusPercent: "추천 보너스 퍼센트",
+    referralBonusDesc: "추천인이 JOY 참여 시 결제 USDT의 N% 포인트 적립",
+    sectorFeeSettings: "섹터별 기여분 설정",
+
+    // Admin – Login
+    loginFailedPrefix: "로그인 실패: ",
+    serverConnectFailed: "서버 연결 실패",
+    verifying: "확인 중...",
+    enterDashboard: "대시보드 입장",
+
+    // Admin – Referrers
+    noReferrersMsg: "추천인 데이터가 없습니다",
+    colReferrerEmail: "추천인 이메일",
+    colInvitedUsers: "초대한 유저",
+    colTotalRewards: "총 보상 (P)",
+
+    // Admin – Toast / misc
+    notAdminError: "관리자 계정이 아닙니다.",
+    copyWalletSuccess: "지갑주소를 복사했습니다.",
+    noCopyTarget: "복사할 주소가 없습니다.",
+    copyFailed: "복사에 실패했습니다.",
 
     // Footer
     footer: "© 2024 JOYCOIN GLOBAL FOUNDATION • SECURED BY BLOCKCHAIN",

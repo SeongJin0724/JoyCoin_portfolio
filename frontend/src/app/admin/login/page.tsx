@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/Toast';
 import { getApiBaseUrl } from '@/lib/apiBase';
+import { useLanguage } from '@/lib/LanguageContext';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -11,6 +12,7 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   // 로그인 처리 함수
   const handleLogin = async (e: React.FormEvent) => {
@@ -35,7 +37,7 @@ export default function AdminLoginPage() {
           const me = await meRes.json();
           if (me.role !== 'admin') {
             await fetch(`${API_BASE_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
-            toast("관리자 계정이 아닙니다.", "error");
+            toast(t('notAdminError'), "error");
             setIsLoading(false);
             return;
           }
@@ -45,10 +47,10 @@ export default function AdminLoginPage() {
         const errorDetail = typeof data.detail === 'object'
           ? JSON.stringify(data.detail)
           : data.detail;
-        toast(`로그인 실패: ${errorDetail}`, "error");
+        toast(`${t('loginFailedPrefix')}${errorDetail}`, "error");
       }
     } catch (error) {
-      toast("서버 연결 실패", "error");
+      toast(t('serverConnectFailed'), "error");
     } finally {
       setIsLoading(false);
     }
@@ -94,7 +96,7 @@ export default function AdminLoginPage() {
               isLoading ? 'bg-slate-700 cursor-not-allowed text-slate-500' : 'bg-red-600/80 hover:bg-red-600 text-white shadow-red-900/20 active:scale-95'
             }`}
           >
-            {isLoading ? "VERIFYING..." : "ENTER DASHBOARD"}
+            {isLoading ? t('verifying') : t('enterDashboard')}
           </button>
         </form>
         
