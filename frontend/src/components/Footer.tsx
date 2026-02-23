@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useLanguage } from "@/lib/LanguageContext";
 
 export default function Footer() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
 
   return (
     <footer className="py-6 sm:py-10 text-center z-10 space-y-3 sm:space-y-4 px-4">
@@ -15,13 +15,13 @@ export default function Footer() {
         <span className="font-semibold text-slate-500">Legal</span>
         <span className="hidden sm:inline mx-1">—</span>
         <div className="flex items-center gap-2 sm:gap-1 flex-wrap justify-center">
-          <Link href="/legal/terms" className="hover:text-cyan-400 transition-colors py-1">Terms of Use</Link>
+          <Link href="/legal/terms" className="hover:text-cyan-400 transition-colors py-1">{locale === 'ko' ? '이용약관' : 'Terms of Use'}</Link>
           <span>·</span>
-          <Link href="/legal/risk" className="hover:text-cyan-400 transition-colors py-1">Risk Disclosure</Link>
+          <Link href="/legal/risk" className="hover:text-cyan-400 transition-colors py-1">{locale === 'ko' ? '위험 고지' : 'Risk Disclosure'}</Link>
           <span>·</span>
-          <Link href="/legal/privacy" className="hover:text-cyan-400 transition-colors py-1">Privacy Policy</Link>
+          <Link href="/legal/privacy" className="hover:text-cyan-400 transition-colors py-1">{locale === 'ko' ? '개인정보처리방침' : 'Privacy Policy'}</Link>
           <span>·</span>
-          <Link href="/legal/token" className="hover:text-cyan-400 transition-colors py-1">Token Nature</Link>
+          <Link href="/legal/token" className="hover:text-cyan-400 transition-colors py-1">{locale === 'ko' ? '토큰 성격' : 'Token Nature'}</Link>
         </div>
       </div>
     </footer>

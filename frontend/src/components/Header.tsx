@@ -99,6 +99,7 @@ export default function Header() {
               <>
                 <a href="/mypage" className="hover:text-blue-400 transition-colors">{t("myPage")}</a>
                 <a href="/buy" className="hover:text-blue-400 transition-colors">{t("buy")}</a>
+                <a href="/points" className="hover:text-emerald-400 transition-colors">{locale === 'ko' ? '포인트' : 'Points'}</a>
                 {user?.role === "admin" && (
                   <a href="/admin/dashboard" className="hover:text-yellow-400 transition-colors text-yellow-500">{t("admin")}</a>
                 )}
@@ -148,7 +149,7 @@ export default function Header() {
                           <div className="font-bold">{notif.title}</div>
                           <div className="text-[10px] mt-1 opacity-80">{notif.message}</div>
                           {notif.created_at && (
-                            <div className="text-[9px] mt-1 opacity-50">{new Date(notif.created_at).toLocaleString('ko-KR')}</div>
+                            <div className="text-[9px] mt-1 opacity-50">{new Date(notif.created_at).toLocaleString(locale === 'ko' ? 'ko-KR' : 'en-US')}</div>
                           )}
                         </div>
                       ))}
@@ -214,6 +215,9 @@ export default function Header() {
                   </a>
                   <a href="/buy" onClick={closeMobileMenu} className="text-white font-semibold py-3 px-4 rounded-xl hover:bg-slate-800/50 transition-colors">
                     {t("buy")}
+                  </a>
+                  <a href="/points" onClick={closeMobileMenu} className="text-emerald-400 font-semibold py-3 px-4 rounded-xl hover:bg-emerald-500/10 transition-colors">
+                    {locale === 'ko' ? '포인트' : 'Points'}
                   </a>
                   {user?.role === "admin" && (
                     <a href="/admin/dashboard" onClick={closeMobileMenu} className="text-yellow-500 font-semibold py-3 px-4 rounded-xl hover:bg-slate-800/50 transition-colors">

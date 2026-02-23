@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.core.security import hash_password, verify_password, create_access_token
 from app.schemas.auth import SignupIn, LoginIn, Tokens
-from app.models import User, Center, Referral, Sector, LegalConsent
+from app.models import User, Referral, Sector, LegalConsent
 from app.core.config import settings
 from jose import jwt, JWTError
 
@@ -53,11 +53,8 @@ def signup(data: SignupIn, request: Request, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="유효하지 않은 추천인 코드입니다")
         if referrer.email == data.email:
             raise HTTPException(status_code=400, detail="자신을 추천인으로 지정할 수 없습니다")
-
-    if data.center_id:
-        center = db.query(Center).filter(Center.id == data.center_id).first()
-        if not center:
-            raise HTTPException(status_code=400, detail="유효하지 않은 센터입니다")
+        if getattr(referrer, 'is_banned', False):
+            raise HTTPException(status_code=400, detail="유효하지 않은 추천인 코드입니다")
 
     if data.sector_id:
         sector = db.query(Sector).filter(Sector.id == data.sector_id).first()
@@ -108,7 +105,7 @@ def signup(data: SignupIn, request: Request, db: Session = Depends(get_db)):
 # 2. 로그인
 # ---------------------------------------------------------
 @router.post("/login", response_model=Tokens)
-def login(data: LoginIn, response: Response, db: Session = Depends(get_db)):
+def login(data: LoginIn, response: Response, request: Request, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == data.email).first()
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(
@@ -122,17 +119,34 @@ def login(data: LoginIn, response: Response, db: Session = Depends(get_db)):
         secret=settings.JWT_SECRET,
     )
 
+    origin = (request.headers.get("origin") or "").lower()
+    is_https_origin = origin.startswith("https://")
+
     response.set_cookie(
         key="accessToken",
         value=access,
         httponly=True,
-        secure=False,
-        samesite="lax",
+        secure=is_https_origin,
+        samesite="none" if is_https_origin else "lax",
         max_age=settings.JWT_EXPIRE_MIN * 60,
         path="/"
     )
 
     return Tokens(access=access)
+
+
+@router.get("/guest-credentials")
+def guest_credentials():
+    enabled = bool(settings.PORTFOLIO_GUEST_ENABLED)
+    payload = {
+        "enabled": enabled,
+        "email": settings.PORTFOLIO_GUEST_EMAIL if enabled else None,
+        "username": settings.PORTFOLIO_GUEST_USERNAME if enabled else None,
+        "password": None,
+    }
+    if enabled and settings.PORTFOLIO_GUEST_EXPOSE_PASSWORD:
+        payload["password"] = settings.PORTFOLIO_GUEST_PASSWORD
+    return payload
 
 # ---------------------------------------------------------
 # 3. 내 정보 조회 (/auth/me)
@@ -158,7 +172,12 @@ async def get_me(current_user: User = Depends(get_current_user)):
         "role": current_user.role,
         "referral_code": current_user.referral_code,
         "recovery_code": current_user.recovery_code,
+        "sector_id": current_user.sector_id,
         "center": center_data,
+        "is_guest": (
+            settings.PORTFOLIO_GUEST_ENABLED
+            and current_user.email == settings.PORTFOLIO_GUEST_EMAIL
+        ),
     }
 
 
@@ -166,8 +185,15 @@ async def get_me(current_user: User = Depends(get_current_user)):
 # 4. 로그아웃
 # ---------------------------------------------------------
 @router.post("/logout")
-def logout(response: Response):
-    response.delete_cookie("accessToken", path="/")
+def logout(response: Response, request: Request):
+    origin = (request.headers.get("origin") or "").lower()
+    is_https_origin = origin.startswith("https://")
+    response.delete_cookie(
+        "accessToken",
+        path="/",
+        secure=is_https_origin,
+        samesite="none" if is_https_origin else "lax",
+    )
     return {"message": "로그아웃 성공"}
 
 

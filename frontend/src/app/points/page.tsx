@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getApiBaseUrl } from "@/lib/apiBase";
+import { useToast } from "@/components/Toast";
+import { useLanguage } from "@/lib/LanguageContext";
 
 interface PointHistory {
   id: number;
@@ -25,6 +27,8 @@ interface Withdrawal {
 export default function PointsPage() {
   const router = useRouter();
   const API = getApiBaseUrl();
+  const { toast } = useToast();
+  const { locale } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState(0);
@@ -93,7 +97,7 @@ export default function PointsPage() {
 
       const data = await res.json();
       if (res.ok) {
-        alert("출금 신청이 완료되었습니다.");
+        toast(locale === 'ko' ? "출금 신청이 완료되었습니다." : "Withdrawal request submitted.", "success");
         setShowForm(false);
         setFormData({ amount: "", method: "bank", account_info: "" });
         fetchData();
@@ -110,11 +114,11 @@ export default function PointsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
-        return <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-[10px] font-bold rounded">대기중</span>;
+        return <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-[10px] font-bold rounded">{locale === 'ko' ? '대기중' : 'Pending'}</span>;
       case "approved":
-        return <span className="px-2 py-1 bg-green-500/20 text-green-400 text-[10px] font-bold rounded">완료</span>;
+        return <span className="px-2 py-1 bg-green-500/20 text-green-400 text-[10px] font-bold rounded">{locale === 'ko' ? '완료' : 'Approved'}</span>;
       case "rejected":
-        return <span className="px-2 py-1 bg-red-500/20 text-red-400 text-[10px] font-bold rounded">거절</span>;
+        return <span className="px-2 py-1 bg-red-500/20 text-red-400 text-[10px] font-bold rounded">{locale === 'ko' ? '거절' : 'Rejected'}</span>;
       default:
         return <span className="text-slate-500">{status}</span>;
     }
@@ -131,14 +135,14 @@ export default function PointsPage() {
   return (
     <div className="min-h-screen p-4 sm:p-6 text-white font-sans">
       <div className="max-w-4xl mx-auto space-y-8">
-        <h1 className="text-2xl sm:text-3xl font-black italic text-blue-500">MY POINTS</h1>
+        <h1 className="text-2xl sm:text-3xl font-black italic text-blue-500">{locale === 'ko' ? '내 포인트' : 'MY POINTS'}</h1>
 
         {/* 포인트 잔액 + 출금 버튼 */}
         <div className="glass p-4 sm:p-8 rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-600/10 to-transparent">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                Available Points
+                {locale === 'ko' ? '사용 가능 포인트' : 'Available Points'}
               </p>
               <p className="text-2xl sm:text-4xl font-black text-emerald-400">
                 {balance.toLocaleString()} <span className="text-sm">P</span>
@@ -149,7 +153,7 @@ export default function PointsPage() {
               disabled={balance <= 0}
               className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-black text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
             >
-              출금 신청
+              {locale === 'ko' ? '출금 신청' : 'Request Withdrawal'}
             </button>
           </div>
         </div>
@@ -158,7 +162,7 @@ export default function PointsPage() {
         {showForm && (
           <div className="glass p-6 rounded-2xl border border-blue-500/20 space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="font-bold text-lg">출금 신청</h2>
+              <h2 className="font-bold text-lg">{locale === 'ko' ? '출금 신청' : 'Request Withdrawal'}</h2>
               <button
                 onClick={() => setShowForm(false)}
                 className="text-slate-500 hover:text-white"
@@ -169,7 +173,7 @@ export default function PointsPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-xs text-slate-400 block mb-1">출금 포인트</label>
+                <label className="text-xs text-slate-400 block mb-1">{locale === 'ko' ? '출금 포인트' : 'Withdrawal Amount'}</label>
                 <input
                   type="number"
                   required
@@ -183,26 +187,30 @@ export default function PointsPage() {
               </div>
 
               <div>
-                <label className="text-xs text-slate-400 block mb-1">출금 방법</label>
+                <label className="text-xs text-slate-400 block mb-1">{locale === 'ko' ? '출금 방법' : 'Withdrawal Method'}</label>
                 <select
                   required
                   className="w-full bg-slate-900/50 border border-slate-700 p-3 rounded-xl outline-none focus:border-blue-500"
                   value={formData.method}
                   onChange={(e) => setFormData({ ...formData, method: e.target.value })}
                 >
-                  <option value="bank">은행 계좌</option>
-                  <option value="usdt">USDT 지갑</option>
+                  <option value="bank">{locale === 'ko' ? '은행 계좌' : 'Bank Account'}</option>
+                  <option value="usdt">USDT {locale === 'ko' ? '지갑' : 'Wallet'}</option>
                 </select>
               </div>
 
               <div>
                 <label className="text-xs text-slate-400 block mb-1">
-                  {formData.method === "bank" ? "계좌번호 (은행명 포함)" : "USDT 지갑 주소 (TRC20)"}
+                  {formData.method === "bank"
+                    ? (locale === 'ko' ? "계좌번호 (은행명 포함)" : "Account Number (incl. bank name)")
+                    : (locale === 'ko' ? "USDT 지갑 주소 (TRC20)" : "USDT Wallet Address (TRC20)")}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder={formData.method === "bank" ? "예: 신한은행 110-123-456789" : "예: TRx..."}
+                  placeholder={formData.method === "bank"
+                    ? (locale === 'ko' ? "예: 신한은행 110-123-456789" : "e.g. Shinhan 110-123-456789")
+                    : "e.g. TRx..."}
                   className="w-full bg-slate-900/50 border border-slate-700 p-3 rounded-xl outline-none focus:border-blue-500"
                   value={formData.account_info}
                   onChange={(e) => setFormData({ ...formData, account_info: e.target.value })}
@@ -216,7 +224,7 @@ export default function PointsPage() {
                 disabled={submitting}
                 className="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-black transition-all disabled:opacity-50"
               >
-                {submitting ? "처리중..." : "출금 신청"}
+                {submitting ? (locale === 'ko' ? '처리중...' : 'Processing...') : (locale === 'ko' ? '출금 신청' : 'Submit Request')}
               </button>
             </form>
           </div>
@@ -226,7 +234,7 @@ export default function PointsPage() {
         {withdrawals.length > 0 && (
           <div className="glass p-6 rounded-2xl border border-slate-800/50">
             <h2 className="font-bold text-sm text-slate-400 uppercase tracking-widest mb-4">
-              출금 내역
+              {locale === 'ko' ? '출금 내역' : 'Withdrawal History'}
             </h2>
             <div className="space-y-2">
               {withdrawals.map((w) => (
@@ -237,7 +245,7 @@ export default function PointsPage() {
                   <div>
                     <p className="font-bold">{w.amount.toLocaleString()}P</p>
                     <p className="text-xs text-slate-500">
-                      {w.method === "bank" ? "은행" : "USDT"} • {new Date(w.created_at).toLocaleDateString()}
+                      {w.method === "bank" ? (locale === 'ko' ? '은행' : 'Bank') : "USDT"} • {new Date(w.created_at).toLocaleDateString(locale === 'ko' ? 'ko-KR' : 'en-US')}
                     </p>
                   </div>
                   {getStatusBadge(w.status)}
@@ -250,7 +258,7 @@ export default function PointsPage() {
         {/* 포인트 적립 내역 */}
         <div className="glass p-6 rounded-2xl border border-slate-800/50">
           <h2 className="font-bold text-sm text-slate-400 uppercase tracking-widest mb-4">
-            포인트 내역
+            {locale === 'ko' ? '포인트 내역' : 'Point History'}
           </h2>
           {history.length > 0 ? (
             <div className="space-y-2">
@@ -272,7 +280,7 @@ export default function PointsPage() {
               ))}
             </div>
           ) : (
-            <p className="text-center text-slate-600 py-8">포인트 내역이 없습니다.</p>
+            <p className="text-center text-slate-600 py-8">{locale === 'ko' ? '포인트 내역이 없습니다.' : 'No point history.'}</p>
           )}
         </div>
       </div>

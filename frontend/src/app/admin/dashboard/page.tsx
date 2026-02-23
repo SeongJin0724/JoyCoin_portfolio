@@ -55,6 +55,7 @@ export default function AdminDashboard() {
   const [sectors, setSectors] = useState<Sector[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDemoAdmin, setIsDemoAdmin] = useState(false);
   const [processingId, setProcessingId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -75,6 +76,35 @@ export default function AdminDashboard() {
   const API_BASE_URL = getApiBaseUrl();
 
   useEffect(() => {
+
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("demo_user");
+        if (raw) {
+          const demo = JSON.parse(raw);
+          if (demo?.role === "admin") {
+            setIsDemoAdmin(true);
+            setRequests([]);
+            setSectors([]);
+            setUsers([]);
+            setProducts([]);
+            setStats({
+              total_users: 0,
+              total_deposits: 0,
+              total_approved_usdt: 0,
+              total_approved_joy: 0,
+              pending_count: 0,
+              approved_count: 0,
+              rejected_count: 0,
+              sector_stats: [],
+            });
+            setIsLoading(false);
+            setError(null);
+            return;
+          }
+        }
+      } catch {}
+    }
     fetchDeposits();
     fetchSectors();
     fetchUsers();
@@ -85,9 +115,10 @@ export default function AdminDashboard() {
 
   const fetchDeposits = async () => {
     try {
+      if (isDemoAdmin) return;
       setIsLoading(true);
       const response = await fetch(`${API_BASE_URL}/admin/deposits`, { credentials: 'include' });
-      if (response.status === 401) { router.push('/admin/login'); return; }
+      if (response.status === 401 || response.status === 403) { router.push('/admin/login'); return; }
       if (!response.ok) throw new Error('입금 목록을 가져올 수 없습니다.');
       setRequests(await response.json());
       setError(null);
@@ -100,6 +131,7 @@ export default function AdminDashboard() {
 
   const fetchSectors = async () => {
     try {
+      if (isDemoAdmin) return;
       const response = await fetch(`${API_BASE_URL}/admin/sectors`, { credentials: 'include' });
       if (response.ok) setSectors(await response.json());
     } catch (err) { console.error("섹터 로드 실패:", err); }
@@ -107,6 +139,7 @@ export default function AdminDashboard() {
 
   const fetchSettings = async () => {
     try {
+      if (isDemoAdmin) return;
       const res = await fetch(`${API_BASE_URL}/admin/settings`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
@@ -149,6 +182,7 @@ export default function AdminDashboard() {
 
   const fetchStats = async () => {
     try {
+      if (isDemoAdmin) return;
       const res = await fetch(`${API_BASE_URL}/admin/deposits/stats`, { credentials: 'include' });
       if (res.ok) setStats(await res.json());
     } catch {}
@@ -156,6 +190,7 @@ export default function AdminDashboard() {
 
   const fetchUsers = async () => {
     try {
+      if (isDemoAdmin) return;
       const response = await fetch(`${API_BASE_URL}/admin/users`, { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
@@ -192,6 +227,7 @@ export default function AdminDashboard() {
 
   const fetchProducts = async () => {
     try {
+      if (isDemoAdmin) return;
       const response = await fetch(`${API_BASE_URL}/products/admin/all`, { credentials: 'include' });
       if (response.ok) setProducts(await response.json());
     } catch (err) { console.error("상품 로드 실패:", err); }
@@ -209,6 +245,9 @@ export default function AdminDashboard() {
   };
 
   const handleProductSave = async () => {
+    if (!productForm.name.trim()) { toast('상품명을 입력하세요', 'warning'); return; }
+    if (!productForm.joy_amount || productForm.joy_amount <= 0) { toast('JOY 수량을 올바르게 입력하세요', 'warning'); return; }
+    if (!productForm.price_usdt || productForm.price_usdt <= 0) { toast('USDT 가격을 올바르게 입력하세요', 'warning'); return; }
     try {
       const url = editingProduct ? `${API_BASE_URL}/products/admin/${editingProduct.id}` : `${API_BASE_URL}/products/admin`;
       const method = editingProduct ? 'PUT' : 'POST';
@@ -424,7 +463,7 @@ export default function AdminDashboard() {
               {/* 섹터별 통계 */}
               {stats?.sector_stats && stats.sector_stats.length > 0 && (
                 <div className="grid grid-cols-5 gap-3">
-                  {stats.sector_stats.map(ss => {
+                  {stats.sector_stats.filter(ss => ss.sector_id !== null).map(ss => {
                     const sector = sectors.find(s => s.id === ss.sector_id);
                     return (
                       <div key={ss.sector_id} className="p-4 rounded-2xl border border-blue-500/10 bg-blue-500/5">
@@ -544,6 +583,8 @@ export default function AdminDashboard() {
                                         ? `https://tronscan.org/#/transaction/${req.detected_tx_hash}`
                                         : req.chain === 'Ethereum'
                                         ? `https://etherscan.io/tx/${req.detected_tx_hash}`
+                                        : req.chain === 'BSC'
+                                        ? `https://bscscan.com/tx/${req.detected_tx_hash}`
                                         : `https://polygonscan.com/tx/${req.detected_tx_hash}`
                                     }
                                     target="_blank"

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useLanguage } from "@/lib/LanguageContext";
 
 type Lang = "en" | "ko";
 
@@ -336,7 +337,7 @@ const UI_TEXT = {
    ══════════════════════════════════════════════════ */
 export default function EntryGate({ children }: { children: React.ReactNode }) {
   const [agreed, setAgreed] = useState<boolean | null>(null);
-  const [lang, setLang] = useState<Lang>("en");
+  const { locale: lang, setLocale } = useLanguage();
   const [activeTab, setActiveTab] = useState<TabKey>("terms");
   const [scrolledTabs, setScrolledTabs] = useState<Record<TabKey, boolean>>({
     terms: false,
@@ -355,11 +356,6 @@ export default function EntryGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setAgreed(localStorage.getItem("legal_agreed") === "true");
-    // Detect browser language for default
-    const browserLang = navigator.language?.toLowerCase() || "";
-    if (browserLang.startsWith("ko")) {
-      setLang("ko");
-    }
   }, []);
 
   const handleScroll = useCallback(() => {
@@ -408,7 +404,7 @@ export default function EntryGate({ children }: { children: React.ReactNode }) {
           <div className="flex justify-center mb-2 sm:mb-3">
             <div className="flex bg-slate-800 rounded-lg p-0.5 text-[10px] sm:text-xs font-bold">
               <button
-                onClick={() => setLang("ko")}
+                onClick={() => setLocale("ko")}
                 className={`px-3 py-1.5 rounded-md transition-all ${
                   lang === "ko" ? "bg-cyan-500 text-white" : "text-slate-400 hover:text-white"
                 }`}
@@ -416,7 +412,7 @@ export default function EntryGate({ children }: { children: React.ReactNode }) {
                 한국어
               </button>
               <button
-                onClick={() => setLang("en")}
+                onClick={() => setLocale("en")}
                 className={`px-3 py-1.5 rounded-md transition-all ${
                   lang === "en" ? "bg-cyan-500 text-white" : "text-slate-400 hover:text-white"
                 }`}

@@ -102,3 +102,43 @@ def demote_user(
     user.role = UserRole.USER.value
     db.commit()
     return {"ok": True, "message": "일반 유저로 변경 완료", "user_id": user.id}
+
+
+# ─── Referrers Router ──────────────────────────────────────────────────────────
+referrers_router = APIRouter(prefix="/admin/referrers", tags=["admin:referrers"])
+
+
+@referrers_router.get("")
+def get_referrers(
+    db: Session = Depends(get_db),
+    admin=Depends(get_current_admin),
+):
+    from sqlalchemy import func, desc
+    from app.models.referral import Referral
+
+    results = (
+        db.query(
+            User.id,
+            User.email,
+            User.username,
+            User.sector_id,
+            func.count(Referral.id).label("invited_count"),
+            func.sum(Referral.reward_points).label("total_rewards"),
+        )
+        .join(Referral, Referral.referrer_id == User.id)
+        .group_by(User.id, User.email, User.username, User.sector_id)
+        .order_by(desc("invited_count"))
+        .all()
+    )
+
+    return [
+        {
+            "id": r.id,
+            "email": r.email,
+            "username": r.username,
+            "sector_id": r.sector_id,
+            "invited_count": r.invited_count or 0,
+            "total_rewards": float(r.total_rewards or 0),
+        }
+        for r in results
+    ]

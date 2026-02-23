@@ -29,6 +29,17 @@ export default function AdminLoginPage() {
       const data = await response.json();
 
       if (response.ok) {
+        // Verify the logged-in user actually has admin role
+        const meRes = await fetch(`${API_BASE_URL}/auth/me`, { credentials: 'include' });
+        if (meRes.ok) {
+          const me = await meRes.json();
+          if (me.role !== 'admin') {
+            await fetch(`${API_BASE_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
+            toast("관리자 계정이 아닙니다.", "error");
+            setIsLoading(false);
+            return;
+          }
+        }
         router.push('/admin/dashboard');
       } else {
         const errorDetail = typeof data.detail === 'object'

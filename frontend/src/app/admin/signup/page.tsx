@@ -5,51 +5,47 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/Toast';
 import { getApiBaseUrl } from '@/lib/apiBase';
 
-export default function SignupPage() {
+export default function AdminSignupPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  // 1. 입력 데이터를 담을 바구니(상태) 만들기
-  const [email, setEmail] = useState(''); // 화면에는 Email로 표시하지만 서버에는 username으로 보냅니다.
+  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [walletAddress, setWalletAddress] = useState('');
   const [referrer, setReferrer] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // 2. 센터 목록을 위한 상태
-  const [centers, setCenters] = useState<{ id: number; name: string; region: string }[]>([]);
-  const [selectedCenterId, setSelectedCenterId] = useState<string>("");
+  const [sectors, setSectors] = useState<{ id: number; name: string }[]>([]);
+  const [selectedSectorId, setSelectedSectorId] = useState<string>("");
 
-  // 3. 페이지가 열리자마자 서버에서 센터 목록을 가져옵니다.
   useEffect(() => {
-    const fetchCenters = async () => {
+    const fetchSectors = async () => {
       try {
         const API_BASE_URL = getApiBaseUrl();
-        const response = await fetch(`${API_BASE_URL}/centers`);
+        const response = await fetch(`${API_BASE_URL}/sectors`);
         if (response.ok) {
           const data = await response.json();
-          setCenters(data);
+          setSectors(data);
         }
       } catch (error) {
-        console.error("센터 목록을 가져오는데 실패했습니다:", error);
+        console.error("섹터 목록을 가져오는데 실패했습니다:", error);
       }
     };
-    fetchCenters();
+    fetchSectors();
   }, []);
 
-  // 4. 회원가입 버튼을 눌렀을 때 실행되는 함수
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // 백엔드 스키마에 맞춘 데이터 구성
       const signupData = {
         email: email,
         password: password,
-        username: email.split('@')[0], // 이메일 앞부분을 username으로 사용
+        username: username,
         wallet_address: walletAddress.trim(),
-        center_id: Number(selectedCenterId),
+        sector_id: selectedSectorId ? Number(selectedSectorId) : null,
         referral_code: referrer || null,
         terms_accepted: true,
         risk_accepted: true,
@@ -67,7 +63,7 @@ export default function SignupPage() {
 
       if (response.ok) {
         toast("회원가입이 완료되었습니다! 로그인을 진행해주세요.", "success");
-        router.push('/auth/login');
+        router.push('/admin/login');
       } else {
         const errorData = await response.json();
         toast(`가입 실패: ${typeof errorData.detail === 'object' ? JSON.stringify(errorData.detail) : errorData.detail}`, "error");
@@ -81,44 +77,48 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#020617] p-6 text-white font-sans">
-      <div className="glass p-10 rounded-[2.5rem] w-full max-w-md border border-blue-500/10 shadow-2xl relative">
+      <div className="glass p-10 rounded-[2.5rem] w-full max-w-md border border-red-500/10 shadow-2xl relative">
         <div className="text-center mb-10">
-          <h2 className="text-blue-500 text-xs font-black uppercase tracking-[0.4em] mb-2">Join JoyCoin</h2>
-          <h1 className="text-3xl font-black italic">SIGN UP</h1>
+          <h2 className="text-red-500 text-xs font-black uppercase tracking-[0.4em] mb-2">Internal Access</h2>
+          <h1 className="text-3xl font-black italic">ADMIN SIGN UP</h1>
         </div>
 
         <form onSubmit={handleSignup} className="space-y-6">
-          {/* 이메일(Username) 입력창 */}
           <div className="space-y-2">
             <label className="text-slate-500 text-[10px] font-bold uppercase ml-2">Email Address</label>
-            <input 
-              type="email" placeholder="example@joy.com" required value={email} onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-slate-900/50 border border-slate-800 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all"
-            />
-          </div>
-          
-          {/* 비밀번호 입력창 */}
-          <div className="space-y-2">
-            <label className="text-slate-500 text-[10px] font-bold uppercase ml-2">Password</label>
-            <input 
-              type="password" placeholder="••••••••" required value={password} onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-slate-900/50 border border-slate-800 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all"
+            <input
+              type="email" placeholder="admin@example.com" required value={email} onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-slate-900/50 border border-slate-800 p-4 rounded-2xl focus:border-red-500 outline-none transition-all"
             />
           </div>
 
-          {/* 센터 선택 드롭다운 (GET /centers 연동) */}
           <div className="space-y-2">
-            <label className="text-slate-500 text-[10px] font-bold uppercase ml-2">Select Center</label>
-            <select 
-              required
-              value={selectedCenterId}
-              onChange={(e) => setSelectedCenterId(e.target.value)}
-              className="w-full bg-slate-900/50 border border-slate-800 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all text-white appearance-none cursor-pointer"
+            <label className="text-slate-500 text-[10px] font-bold uppercase ml-2">Username</label>
+            <input
+              type="text" placeholder="adminname" required value={username} onChange={(e) => setUsername(e.target.value)}
+              className="w-full bg-slate-900/50 border border-slate-800 p-4 rounded-2xl focus:border-red-500 outline-none transition-all"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-slate-500 text-[10px] font-bold uppercase ml-2">Password</label>
+            <input
+              type="password" placeholder="••••••••" required value={password} onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-slate-900/50 border border-slate-800 p-4 rounded-2xl focus:border-red-500 outline-none transition-all"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-slate-500 text-[10px] font-bold uppercase ml-2">Select Sector (Optional)</label>
+            <select
+              value={selectedSectorId}
+              onChange={(e) => setSelectedSectorId(e.target.value)}
+              className="w-full bg-slate-900/50 border border-slate-800 p-4 rounded-2xl focus:border-red-500 outline-none transition-all text-white appearance-none cursor-pointer"
             >
-              <option value="" disabled>센터를 선택하세요</option>
-              {centers.map((center) => (
-                <option key={center.id} value={center.id} className="bg-slate-900">
-                  {center.name} ({center.region})
+              <option value="">섹터를 선택하세요 (선택사항)</option>
+              {sectors.map((sector) => (
+                <option key={sector.id} value={sector.id} className="bg-slate-900">
+                  Sector {sector.name}
                 </option>
               ))}
             </select>
@@ -132,22 +132,21 @@ export default function SignupPage() {
               required
               value={walletAddress}
               onChange={(e) => setWalletAddress(e.target.value)}
-              className="w-full bg-slate-900/50 border border-slate-800 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all"
+              className="w-full bg-slate-900/50 border border-slate-800 p-4 rounded-2xl focus:border-red-500 outline-none transition-all"
             />
           </div>
 
-          {/* 추천인 코드 입력창 */}
           <div className="space-y-2">
             <label className="text-slate-500 text-[10px] font-bold uppercase ml-2">Referral Code (Optional)</label>
-            <input 
+            <input
               type="text" placeholder="Referral Code" value={referrer} onChange={(e) => setReferrer(e.target.value)}
-              className="w-full bg-slate-900/50 border border-slate-800 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all"
+              className="w-full bg-slate-900/50 border border-slate-800 p-4 rounded-2xl focus:border-red-500 outline-none transition-all"
             />
           </div>
 
-          <button 
+          <button
             type="submit" disabled={isLoading}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-2xl shadow-xl shadow-blue-900/20 active:scale-95 transition-all"
+            className="w-full py-4 bg-red-600/80 hover:bg-red-600 text-white font-black rounded-2xl shadow-xl shadow-red-900/20 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isLoading ? "CREATING ACCOUNT..." : "REGISTER NOW"}
           </button>

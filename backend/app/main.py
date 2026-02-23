@@ -1,5 +1,6 @@
 # backend/app/main.py
 import os
+import re
 import logging
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,7 +12,7 @@ from app.core.db import Base, engine, get_db
 from app.api.auth import router as auth_router
 from app.api.deposits import router as deposits_router
 from app.api.admin_deposits import router as admin_deposits_router
-from app.api.admin_users import router as admin_users_router
+from app.api.admin_users import router as admin_users_router, referrers_router as admin_referrers_router
 from app.api.admin_settings import router as admin_settings_router
 from app.api.admin_sectors import router as admin_sectors_router
 from app.api.sector_dashboard import router as sector_dashboard_router
@@ -40,11 +41,13 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="JoyCoin Website API")
 
-origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")]
+origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",") if o.strip()]
+origin_regex = os.getenv("CORS_ORIGIN_REGEX") or r"^https://.*\.vercel\.app$"
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -53,8 +56,15 @@ app.add_middleware(
 
 
 def _cors_headers(request: Request) -> dict:
+    request_origin = request.headers.get("origin")
+    allow_origin = origins[0] if origins else "*"
+    if request_origin:
+        if request_origin in origins:
+            allow_origin = request_origin
+        elif origin_regex and re.match(origin_regex, request_origin):
+            allow_origin = request_origin
     return {
-        "Access-Control-Allow-Origin": request.headers.get("origin") or (origins[0] if origins else "*"),
+        "Access-Control-Allow-Origin": allow_origin,
         "Access-Control-Allow-Credentials": "true",
         "Access-Control-Allow-Methods": "*",
         "Access-Control-Allow-Headers": "*",
@@ -97,6 +107,9 @@ def on_startup():
 
     logger.info("Seeding initial data...")
     seed_initial_data()
+
+    logger.info("Seeding portfolio guest account...")
+    seed_portfolio_guest()
 
     logger.info("Generating recovery codes for existing users...")
     generate_recovery_codes()
@@ -239,6 +252,85 @@ def seed_initial_data():
             logger.info("- Created 1 exchange rate")
 
 
+def seed_portfolio_guest():
+    if not settings.PORTFOLIO_GUEST_ENABLED:
+        return
+
+    with next(get_db()) as db:
+        guest = db.query(User).filter(User.email == settings.PORTFOLIO_GUEST_EMAIL).first()
+        if guest is None:
+            guest = User(
+                email=settings.PORTFOLIO_GUEST_EMAIL,
+                password_hash=hash_password(settings.PORTFOLIO_GUEST_PASSWORD),
+                username=settings.PORTFOLIO_GUEST_USERNAME,
+                wallet_address=settings.PORTFOLIO_GUEST_WALLET_ADDRESS,
+                role=UserRole.USER.value,
+                is_email_verified=True,
+                total_joy=12500,
+                total_points=840,
+                referral_reward_remaining=2,
+            )
+            db.add(guest)
+            db.commit()
+            db.refresh(guest)
+            logger.info("Portfolio guest account created: %s", guest.email)
+        else:
+            guest.password_hash = hash_password(settings.PORTFOLIO_GUEST_PASSWORD)
+            guest.username = settings.PORTFOLIO_GUEST_USERNAME
+            guest.wallet_address = settings.PORTFOLIO_GUEST_WALLET_ADDRESS
+            guest.is_email_verified = True
+            guest.is_banned = False
+            if (guest.total_joy or 0) == 0:
+                guest.total_joy = 12500
+            if (guest.total_points or 0) == 0:
+                guest.total_points = 840
+            db.commit()
+            logger.info("Portfolio guest account refreshed: %s", guest.email)
+
+        existing_demo_deposits = (
+            db.query(DepositRequest)
+            .filter(DepositRequest.user_id == guest.id)
+            .count()
+        )
+        if existing_demo_deposits == 0:
+            demo_address = settings.USDT_ADMIN_ADDRESS_TRON or settings.USDT_ADMIN_ADDRESS or "TDEMOJOYCOINADDRESS"
+            demo_items = [
+                DepositRequest(
+                    user_id=guest.id,
+                    chain="TRON",
+                    assigned_address=demo_address,
+                    sender_name=guest.username,
+                    expected_amount=200.37,
+                    actual_amount=200.37,
+                    joy_amount=1000,
+                    status="approved",
+                ),
+                DepositRequest(
+                    user_id=guest.id,
+                    chain="Polygon",
+                    assigned_address=demo_address,
+                    sender_name=guest.username,
+                    expected_amount=380.12,
+                    joy_amount=1900,
+                    status="pending",
+                ),
+                DepositRequest(
+                    user_id=guest.id,
+                    chain="Ethereum",
+                    assigned_address=demo_address,
+                    sender_name=guest.username,
+                    expected_amount=200.58,
+                    actual_amount=200.00,
+                    joy_amount=1000,
+                    status="rejected",
+                    admin_notes="Demo rejected request",
+                ),
+            ]
+            db.add_all(demo_items)
+            db.commit()
+            logger.info("Seeded demo deposit history for portfolio guest")
+
+
 def generate_recovery_codes():
     """기존 사용자에게 복구 코드가 없으면 생성"""
     with next(get_db()) as db:
@@ -280,6 +372,7 @@ app.include_router(auth_router)
 app.include_router(deposits_router)
 app.include_router(admin_deposits_router)
 app.include_router(admin_users_router)
+app.include_router(admin_referrers_router)
 app.include_router(admin_settings_router)
 app.include_router(admin_sectors_router)
 app.include_router(sector_dashboard_router)
